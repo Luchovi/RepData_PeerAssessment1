@@ -1,0 +1,75 @@
+# Peer assignment 1
+
+Luis Valdivieso
+
+## Loading the data
+
+```{r loading data}
+activ = read.csv("/Users/lucho/Documents/ReproducibleResearch/Week1/RResearch1/activity.csv")
+attach(activ)
+head(activ)
+```
+
+## Analysis with missing data
+
+```{r daily_statistics}
+daysteps = by(activ[,1], date, sum)
+daysteps= as.vector(daysteps)
+hist(daysteps)
+mean(daysteps,na.rm=TRUE)
+median(daysteps,na.rm=TRUE)
+```
+
+Average daily activity pattern
+
+```{r daily_activity_pattern}
+mdaysteps = by(activ[,1], interval, mean,na.rm=TRUE)
+plot(mdaysteps,type="l")
+#Day interval with the maximum number of steps
+mdaysteps[which.max(mdaysteps)]
+```
+
+## Analysis with imputed data
+
+```{r}
+# Number of missing values in the dataset
+indexm = which(is.na(activ)==TRUE)
+length(indexm)
+daysm = unique(activ[indexm,2])
+aux = na.omit(activ)
+aux$date=factor(aux$date)
+h = as.vector(by(aux[,1],aux$interval,mean))
+afilled = activ
+# Imputation
+for (i in 1:length(daysm)){
+  afilled[date==daysm[i],1] = h}
+daystepsf = by(afilled[,1], date, sum)
+daystepsf= as.vector(daystepsf)
+hist(daystepsf)
+mean(daystepsf)
+median(daystepsf)
+detach(activ)
+```
+
+The histogram now is more peaked, the mean does not change and the 
+median equals the mean. This is expected, since we replaced the 
+missing values by the mean number of steps in the intervals with information.
+
+## Week and weekendays comparison
+
+```{r}
+library(timeDate)
+WD = as.numeric(isWeekday(afilled$date, wday=1:5))
+afilled = cbind(afilled,WD)
+afilledw = afilled[WD==1,]
+wmdaysteps = by(afilledw[,1], afilledw$interval, mean)
+afilledwe = afilled[WD==0,]
+wemdaysteps = by(afilledwe[,1], afilledwe$interval, mean)
+par(mfrow = c(2,1))
+plot(wmdaysteps,type="l")
+title("Weekdays average number of steps per interval")
+plot(wemdaysteps,type="l")
+title("Weekendays average number of steps per interval")
+```
+
+
